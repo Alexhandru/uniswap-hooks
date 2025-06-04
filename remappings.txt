@@ -1,3 +1,4 @@
 forge-std/=lib/forge-std/src/
 v4-core/=lib/v4-core/
 openzeppelin/=lib/v4-core/lib/openzeppelin-contracts/contracts/
+@openzeppelin/uniswap-hooks/=lib/uniswap-hooks/src/
