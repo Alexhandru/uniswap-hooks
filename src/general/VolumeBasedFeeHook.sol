@@ -31,7 +31,6 @@ import {SwapParams} from "v4-core/src/types/PoolOperation.sol";
 contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
     using PoolIdLibrary for PoolKey;
     using CustomRevert for bytes4;
-    using PoolIdLibrary for PoolKey;
 
     /// @dev The default fee applied when swap amount is below minAmount
     uint24 immutable defaultFee;
