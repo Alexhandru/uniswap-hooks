@@ -150,8 +150,7 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
                     minAmount0,
                     maxAmount0,
                     feeAtMaxAmount0,
-                    feeAtMinAmount0,
-                    defaultFee
+                    feeAtMinAmount0
                 );
             } else {
                 calculatedFee = calculateFeePerScenario(
@@ -159,8 +158,7 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
                     minAmount1,
                     maxAmount1,
                     feeAtMaxAmount1,
-                    feeAtMinAmount1,
-                    defaultFee
+                    feeAtMinAmount1
                 );
             }
         } else {
@@ -170,8 +168,7 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
                     minAmount1,
                     maxAmount1,
                     feeAtMaxAmount1,
-                    feeAtMinAmount1,
-                    defaultFee
+                    feeAtMinAmount1
                 );
             } else {
                 calculatedFee = calculateFeePerScenario(
@@ -179,8 +176,7 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
                     minAmount0,
                     maxAmount0,
                     feeAtMaxAmount0,
-                    feeAtMinAmount0,
-                    defaultFee
+                    feeAtMinAmount0
                 );
             }
         }
@@ -194,7 +190,6 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
      * @param maxAmount The maximum amount threshold
      * @param feeAtMaxAmount The fee at maximum amount
      * @param feeAtMinAmount The fee at minimum amount
-     * @param _defaultFee The default fee for amounts below minimum
      * @return calculatedFee The calculated fee as a uint24
      */
     function calculateFeePerScenario(
@@ -202,9 +197,8 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
         uint256 minAmount,
         uint256 maxAmount,
         uint24 feeAtMaxAmount,
-        uint24 feeAtMinAmount,
-        uint24 _defaultFee
-    ) internal pure virtual returns(uint24) {
+        uint24 feeAtMinAmount
+    ) internal view virtual returns(uint24) {
         if(volume == minAmount){
             return feeAtMinAmount;
         }
@@ -214,7 +208,7 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
         }
 
         if(volume < minAmount){
-            return _defaultFee;
+            return defaultFee;
         }
 
         uint256 deltaFee = feeAtMinAmount - feeAtMaxAmount;

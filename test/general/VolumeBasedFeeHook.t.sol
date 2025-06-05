@@ -418,7 +418,7 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
         amountSpecifiedFuzz = _amountSpecified < 0 ? -amountSpecifiedFuzz : amountSpecifiedFuzz;
     }
 
-    function _validateParams(IVolumeBasedFeeHook.SwapVolumeParams memory paramsOut) private {
+    function _validateParams(IVolumeBasedFeeHook.SwapVolumeParams memory paramsOut) view private {
         assertEq(paramsOut.defaultFee, defaultFee, "defaultFee mismatch");
         assertEq(paramsOut.feeAtMinAmount0, feeAtMinAmount0, "feeAtMinAmount0 mismatch");
         assertEq(paramsOut.feeAtMaxAmount0, feeAtMaxAmount0, "feeAtMaxAmount0 mismatch");
