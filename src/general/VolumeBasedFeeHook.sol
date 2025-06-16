@@ -86,59 +86,6 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
         maxAmount1 = params.maxAmount1;
     }
 
-    /**
-     * @dev Returns the current fee parameters of the hook.
-     * @return SwapVolumeParams struct containing all fee and amount threshold parameters
-     */
-    function getSwapVolumeParams()
-        external
-        view
-        virtual
-        returns (SwapVolumeParams memory)
-    {
-        return
-            SwapVolumeParams({
-                defaultFee: defaultFee,
-                feeAtMinAmount0: feeAtMinAmount0,
-                feeAtMaxAmount0: feeAtMaxAmount0,
-                feeAtMinAmount1: feeAtMinAmount1,
-                feeAtMaxAmount1: feeAtMaxAmount1,
-                minAmount0: minAmount0,
-                maxAmount0: maxAmount0,
-                minAmount1: minAmount1,
-                maxAmount1: maxAmount1
-            });
-    }
-
-    /**
-     * @dev Sets the hook permissions. Only requires beforeSwap permission to update dynamic fees.
-     * @return permissions The hook permissions
-     */
-    function getHookPermissions()
-        public
-        pure
-        virtual
-        override
-        returns (Hooks.Permissions memory)
-    {
-        return
-            Hooks.Permissions({
-                beforeInitialize: false,
-                afterInitialize: false,
-                beforeAddLiquidity: false,
-                afterAddLiquidity: false,
-                beforeRemoveLiquidity: false,
-                afterRemoveLiquidity: false,
-                beforeSwap: true,
-                afterSwap: false,
-                beforeDonate: false,
-                afterDonate: false,
-                beforeSwapReturnDelta: false,
-                afterSwapReturnDelta: false,
-                afterAddLiquidityReturnDelta: false,
-                afterRemoveLiquidityReturnDelta: false
-            });
-    }
 
     /**
      * @dev Handles the beforeSwap hook by calculating and updating the dynamic LP fee based on
@@ -240,5 +187,59 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
         uint256 feeDifference = (deltaFee * (volume - minAmount)) /
             (maxAmount - minAmount);
         return feeAtMinAmount - uint24(feeDifference);
+    }
+
+    /**
+     * @dev Returns the current fee parameters of the hook.
+     * @return SwapVolumeParams struct containing all fee and amount threshold parameters
+     */
+    function getSwapVolumeParams()
+        external
+        view
+        virtual
+        returns (SwapVolumeParams memory)
+    {
+        return
+            SwapVolumeParams({
+                defaultFee: defaultFee,
+                feeAtMinAmount0: feeAtMinAmount0,
+                feeAtMaxAmount0: feeAtMaxAmount0,
+                feeAtMinAmount1: feeAtMinAmount1,
+                feeAtMaxAmount1: feeAtMaxAmount1,
+                minAmount0: minAmount0,
+                maxAmount0: maxAmount0,
+                minAmount1: minAmount1,
+                maxAmount1: maxAmount1
+            });
+    }
+
+    /**
+     * @dev Sets the hook permissions. Only requires beforeSwap permission to update dynamic fees.
+     * @return permissions The hook permissions
+     */
+    function getHookPermissions()
+        public
+        pure
+        virtual
+        override
+        returns (Hooks.Permissions memory)
+    {
+        return
+            Hooks.Permissions({
+                beforeInitialize: false,
+                afterInitialize: false,
+                beforeAddLiquidity: false,
+                afterAddLiquidity: false,
+                beforeRemoveLiquidity: false,
+                afterRemoveLiquidity: false,
+                beforeSwap: true,
+                afterSwap: false,
+                beforeDonate: false,
+                afterDonate: false,
+                beforeSwapReturnDelta: false,
+                afterSwapReturnDelta: false,
+                afterAddLiquidityReturnDelta: false,
+                afterRemoveLiquidityReturnDelta: false
+            });
     }
 }
