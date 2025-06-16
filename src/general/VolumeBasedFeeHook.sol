@@ -58,13 +58,22 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
      * - Any fee at max amount is higher than its corresponding fee at min fee
      * - Any min amount is greater than or equal to its max amount
      */
-    constructor(IPoolManager _poolManager, SwapVolumeParams memory params) BaseHook(_poolManager){
-        if(params.feeAtMinAmount0 > params.defaultFee) InvalidFees.selector.revertWith();
-        if(params.feeAtMaxAmount0 > params.feeAtMinAmount0) InvalidFees.selector.revertWith();
-        if(params.feeAtMinAmount1 > params.defaultFee) InvalidFees.selector.revertWith();
-        if(params.feeAtMaxAmount1 > params.feeAtMinAmount1) InvalidFees.selector.revertWith();
-        if(params.minAmount0 >= params.maxAmount0) InvalidAmountThresholds.selector.revertWith();
-        if(params.minAmount1 >= params.maxAmount1) InvalidAmountThresholds.selector.revertWith();
+    constructor(
+        IPoolManager _poolManager,
+        SwapVolumeParams memory params
+    ) BaseHook(_poolManager) {
+        if (params.feeAtMinAmount0 > params.defaultFee)
+            InvalidFees.selector.revertWith();
+        if (params.feeAtMaxAmount0 > params.feeAtMinAmount0)
+            InvalidFees.selector.revertWith();
+        if (params.feeAtMinAmount1 > params.defaultFee)
+            InvalidFees.selector.revertWith();
+        if (params.feeAtMaxAmount1 > params.feeAtMinAmount1)
+            InvalidFees.selector.revertWith();
+        if (params.minAmount0 >= params.maxAmount0)
+            InvalidAmountThresholds.selector.revertWith();
+        if (params.minAmount1 >= params.maxAmount1)
+            InvalidAmountThresholds.selector.revertWith();
 
         defaultFee = params.defaultFee;
         feeAtMinAmount0 = params.feeAtMinAmount0;
@@ -81,41 +90,54 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
      * @dev Returns the current fee parameters of the hook.
      * @return SwapVolumeParams struct containing all fee and amount threshold parameters
      */
-    function getSwapVolumeParams() external view virtual returns (SwapVolumeParams memory) {
-        return SwapVolumeParams({
-            defaultFee: defaultFee,
-            feeAtMinAmount0: feeAtMinAmount0,
-            feeAtMaxAmount0: feeAtMaxAmount0,
-            feeAtMinAmount1: feeAtMinAmount1,
-            feeAtMaxAmount1: feeAtMaxAmount1,
-            minAmount0: minAmount0,
-            maxAmount0: maxAmount0,
-            minAmount1: minAmount1,
-            maxAmount1: maxAmount1
-        });
+    function getSwapVolumeParams()
+        external
+        view
+        virtual
+        returns (SwapVolumeParams memory)
+    {
+        return
+            SwapVolumeParams({
+                defaultFee: defaultFee,
+                feeAtMinAmount0: feeAtMinAmount0,
+                feeAtMaxAmount0: feeAtMaxAmount0,
+                feeAtMinAmount1: feeAtMinAmount1,
+                feeAtMaxAmount1: feeAtMaxAmount1,
+                minAmount0: minAmount0,
+                maxAmount0: maxAmount0,
+                minAmount1: minAmount1,
+                maxAmount1: maxAmount1
+            });
     }
 
     /**
      * @dev Sets the hook permissions. Only requires beforeSwap permission to update dynamic fees.
      * @return permissions The hook permissions
      */
-    function getHookPermissions() public pure virtual override returns (Hooks.Permissions memory) {
-        return Hooks.Permissions({
-            beforeInitialize: false,
-            afterInitialize: false,
-            beforeAddLiquidity: false,
-            afterAddLiquidity: false,
-            beforeRemoveLiquidity: false,
-            afterRemoveLiquidity: false,
-            beforeSwap: true,
-            afterSwap: false,
-            beforeDonate: false,
-            afterDonate: false,
-            beforeSwapReturnDelta: false,
-            afterSwapReturnDelta: false,
-            afterAddLiquidityReturnDelta: false,
-            afterRemoveLiquidityReturnDelta: false
-        });
+    function getHookPermissions()
+        public
+        pure
+        virtual
+        override
+        returns (Hooks.Permissions memory)
+    {
+        return
+            Hooks.Permissions({
+                beforeInitialize: false,
+                afterInitialize: false,
+                beforeAddLiquidity: false,
+                afterAddLiquidity: false,
+                beforeRemoveLiquidity: false,
+                afterRemoveLiquidity: false,
+                beforeSwap: true,
+                afterSwap: false,
+                beforeDonate: false,
+                afterDonate: false,
+                beforeSwapReturnDelta: false,
+                afterSwapReturnDelta: false,
+                afterAddLiquidityReturnDelta: false,
+                afterRemoveLiquidityReturnDelta: false
+            });
     }
 
     /**
@@ -123,14 +145,18 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
      * the swap amount.
      * @return The hook selector, zero delta (no hooks modifying swap amounts), and zero fee
      */
-    function _beforeSwap(address, PoolKey calldata key, SwapParams calldata swapParams, bytes calldata)
-        internal
-        virtual
-        override
-        returns (bytes4, BeforeSwapDelta, uint24)
-    {
+    function _beforeSwap(
+        address,
+        PoolKey calldata key,
+        SwapParams calldata swapParams,
+        bytes calldata
+    ) internal virtual override returns (bytes4, BeforeSwapDelta, uint24) {
         poolManager.updateDynamicLPFee(key, calculateFee(swapParams));
-        return (BaseHook.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, 0);
+        return (
+            BaseHook.beforeSwap.selector,
+            BeforeSwapDeltaLibrary.ZERO_DELTA,
+            0
+        );
     }
 
     /**
@@ -141,9 +167,9 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
      */
     function calculateFee(
         SwapParams calldata swapParams
-    ) internal view virtual returns(uint24 calculatedFee) {
-        if(swapParams.zeroForOne) {
-            if(swapParams.amountSpecified < 0) {
+    ) internal view virtual returns (uint24 calculatedFee) {
+        if (swapParams.zeroForOne) {
+            if (swapParams.amountSpecified < 0) {
                 calculatedFee = calculateFeePerScenario(
                     uint256(-swapParams.amountSpecified),
                     minAmount0,
@@ -161,7 +187,7 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
                 );
             }
         } else {
-            if(swapParams.amountSpecified < 0) {
+            if (swapParams.amountSpecified < 0) {
                 calculatedFee = calculateFeePerScenario(
                     uint256(-swapParams.amountSpecified),
                     minAmount1,
@@ -197,21 +223,22 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
         uint256 maxAmount,
         uint24 feeAtMaxAmount,
         uint24 feeAtMinAmount
-    ) internal view virtual returns(uint24) {
-        if(volume == minAmount){
+    ) internal view virtual returns (uint24) {
+        if (volume == minAmount) {
             return feeAtMinAmount;
         }
-        
-        if(volume >= maxAmount){
+
+        if (volume >= maxAmount) {
             return feeAtMaxAmount;
         }
 
-        if(volume < minAmount){
+        if (volume < minAmount) {
             return defaultFee;
         }
 
         uint256 deltaFee = feeAtMinAmount - feeAtMaxAmount;
-        uint256 feeDifference = (deltaFee * (volume - minAmount)) / (maxAmount - minAmount);
+        uint256 feeDifference = (deltaFee * (volume - minAmount)) /
+            (maxAmount - minAmount);
         return feeAtMinAmount - uint24(feeDifference);
     }
 }
