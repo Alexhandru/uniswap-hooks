@@ -55,7 +55,7 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
 
     /// @dev Minimum amount threshold for currency1
     uint256 immutable minAmount1;
-    
+
     /// @dev Maximum amount threshold for currency1
     uint256 immutable maxAmount1;
 
@@ -98,7 +98,6 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
         minAmount1 = params.minAmount1;
         maxAmount1 = params.maxAmount1;
     }
-
 
     /**
      * @dev Handles the beforeSwap hook by calculating and updating the dynamic LP fee based on
@@ -197,11 +196,12 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
             return defaultFee;
         }
 
-        uint256 deltaFee = feeAtMinAmount - feeAtMaxAmount;
-        uint256 feeDifference = (deltaFee * (volume - minAmount)) /
-            (maxAmount - minAmount);
-            
-        return feeAtMinAmount - uint24(feeDifference);
+        return
+            feeAtMinAmount -
+            uint24(
+                ((feeAtMinAmount - feeAtMaxAmount) * (volume - minAmount)) /
+                    (maxAmount - minAmount)
+            );
     }
 
     /**
