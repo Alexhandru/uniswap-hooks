@@ -14,7 +14,6 @@ import {ProtocolFeeLibrary} from "v4-core/src/libraries/ProtocolFeeLibrary.sol";
 import {IPositionManager} from "v4-periphery/src/interfaces/IPositionManager.sol";
 import {VolumeBasedFeeHook} from "../../src/general/VolumeBasedFeeHook.sol";
 import {HookMiner} from "v4-periphery/src/utils/HookMiner.sol";
-import {IVolumeBasedFeeHook} from "../../src/interfaces/IVolumeBasedFeeHook.sol";
 import {SwapParams} from "v4-core/src/types/PoolOperation.sol";
 import {Deployers} from "v4-core/test/utils/Deployers.sol";
 
@@ -38,8 +37,8 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
                 Hooks.BEFORE_SWAP_FLAG 
             ) ^ (0x4444 << 144); // Namespace the hook to avoid collisions
 
-    IVolumeBasedFeeHook.SwapVolumeParams swapVolumeParams = 
-        IVolumeBasedFeeHook.SwapVolumeParams({
+    VolumeBasedFeeHook.SwapVolumeParams swapVolumeParams = 
+        VolumeBasedFeeHook.SwapVolumeParams({
             defaultFee: defaultFee,
             feeAtMinAmount0: feeAtMinAmount0,
             feeAtMaxAmount0: feeAtMaxAmount0,
@@ -89,7 +88,7 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
         (, bytes32 salt) =
             HookMiner.find(address(this), flags, type(VolumeBasedFeeHook).creationCode, constructorArgs);
 
-        vm.expectRevert(IVolumeBasedFeeHook.InvalidFees.selector);
+        vm.expectRevert(VolumeBasedFeeHook.InvalidFees.selector);
         new VolumeBasedFeeHook{salt: salt}(IPoolManager(manager), swapVolumeParams);
     }
 
@@ -103,7 +102,7 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
         (, bytes32 salt) =
             HookMiner.find(address(this), flags, type(VolumeBasedFeeHook).creationCode, constructorArgs);
 
-        vm.expectRevert(IVolumeBasedFeeHook.InvalidFees.selector);
+        vm.expectRevert(VolumeBasedFeeHook.InvalidFees.selector);
         new VolumeBasedFeeHook{salt: salt}(IPoolManager(manager), swapVolumeParams);
     }
 
@@ -117,7 +116,7 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
         (, bytes32 salt) =
             HookMiner.find(address(this), flags, type(VolumeBasedFeeHook).creationCode, constructorArgs);
 
-        vm.expectRevert(IVolumeBasedFeeHook.InvalidFees.selector);
+        vm.expectRevert(VolumeBasedFeeHook.InvalidFees.selector);
         new VolumeBasedFeeHook{salt: salt}(IPoolManager(manager), swapVolumeParams);
     }
 
@@ -131,7 +130,7 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
         (, bytes32 salt) =
             HookMiner.find(address(this), flags, type(VolumeBasedFeeHook).creationCode, constructorArgs);
 
-        vm.expectRevert(IVolumeBasedFeeHook.InvalidFees.selector);
+        vm.expectRevert(VolumeBasedFeeHook.InvalidFees.selector);
         new VolumeBasedFeeHook{salt: salt}(IPoolManager(manager), swapVolumeParams);
     }
 
@@ -145,7 +144,7 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
         (, bytes32 salt) =
             HookMiner.find(address(this), flags, type(VolumeBasedFeeHook).creationCode, constructorArgs);
 
-        vm.expectRevert(IVolumeBasedFeeHook.InvalidAmountThresholds.selector);
+        vm.expectRevert(VolumeBasedFeeHook.InvalidAmountThresholds.selector);
         new VolumeBasedFeeHook{salt: salt}(IPoolManager(manager), swapVolumeParams);
     }
 
@@ -159,7 +158,7 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
         (, bytes32 salt) =
             HookMiner.find(address(this), flags, type(VolumeBasedFeeHook).creationCode, constructorArgs);
 
-        vm.expectRevert(IVolumeBasedFeeHook.InvalidAmountThresholds.selector);
+        vm.expectRevert(VolumeBasedFeeHook.InvalidAmountThresholds.selector);
         new VolumeBasedFeeHook{salt: salt}(IPoolManager(manager), swapVolumeParams);
     }
 
@@ -250,7 +249,7 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
 
     function test_swap_sameMinMaxFees() public {
         // Set up new params where min and max fees are the same
-        IVolumeBasedFeeHook.SwapVolumeParams memory sameFeesParams = IVolumeBasedFeeHook.SwapVolumeParams({
+        VolumeBasedFeeHook.SwapVolumeParams memory sameFeesParams = VolumeBasedFeeHook.SwapVolumeParams({
             defaultFee: 3000,
             feeAtMinAmount0: 2000, // Same fee for min and max amount0
             feeAtMaxAmount0: 2000,
@@ -322,7 +321,7 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
         );
         _setupAmountSpecified(_amountSpecified);
 
-        IVolumeBasedFeeHook.SwapVolumeParams memory params = IVolumeBasedFeeHook.SwapVolumeParams({
+        VolumeBasedFeeHook.SwapVolumeParams memory params = VolumeBasedFeeHook.SwapVolumeParams({
             defaultFee: defaultFee,
             feeAtMinAmount0: feeAtMinAmount0,
             feeAtMaxAmount0: feeAtMaxAmount0,
@@ -418,7 +417,7 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
         amountSpecifiedFuzz = _amountSpecified < 0 ? -amountSpecifiedFuzz : amountSpecifiedFuzz;
     }
 
-    function _validateParams(IVolumeBasedFeeHook.SwapVolumeParams memory paramsOut) view private {
+    function _validateParams(VolumeBasedFeeHook.SwapVolumeParams memory paramsOut) view private {
         assertEq(paramsOut.defaultFee, defaultFee, "defaultFee mismatch");
         assertEq(paramsOut.feeAtMinAmount0, feeAtMinAmount0, "feeAtMinAmount0 mismatch");
         assertEq(paramsOut.feeAtMaxAmount0, feeAtMaxAmount0, "feeAtMaxAmount0 mismatch");

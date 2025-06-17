@@ -1,7 +1,6 @@
 pragma solidity ^0.8.24;
 
 import {BaseHook} from "../base/BaseHook.sol";
-import {IVolumeBasedFeeHook} from "../interfaces/IVolumeBasedFeeHook.sol";
 
 import {Hooks} from "v4-core/src/libraries/Hooks.sol";
 import {IPoolManager} from "v4-core/src/interfaces/IPoolManager.sol";
@@ -28,9 +27,35 @@ import {SwapParams} from "v4-core/src/types/PoolOperation.sol";
  *
  * NOTE: The fee calculation is symmetric for both swap directions and both exact input/output swaps.
  */
-contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
+contract VolumeBasedFeeHook is BaseHook {
     using PoolIdLibrary for PoolKey;
     using CustomRevert for bytes4;
+
+    /// @dev Struct of parameters for the hook
+    struct SwapVolumeParams {
+        uint24 defaultFee;
+        uint24 feeAtMinAmount0;
+        uint24 feeAtMaxAmount0;
+        uint24 feeAtMinAmount1;
+        uint24 feeAtMaxAmount1;
+        uint256 minAmount0;
+        uint256 maxAmount0;
+        uint256 minAmount1;
+        uint256 maxAmount1;
+    }
+
+    /**
+     * @dev Thrown when fee relationships are invalid:
+     * - feeAtMinAmount is greater than defaultFee
+     * - feeAtMaxAmount is greater than feeAtMinAmount
+     */
+    error InvalidFees();
+
+    /**
+     * @dev Thrown when amount thresholds are invalid:
+     * - minAmount is greater than or equal to maxAmount
+     */
+    error InvalidAmountThresholds();
 
     /// @dev The default fee applied when swap amount is below minAmount
     uint24 immutable defaultFee;
