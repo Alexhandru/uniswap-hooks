@@ -443,6 +443,6 @@ contract VolumeBasedFeeHookHarness is VolumeBasedFeeHook {
     function exposed_calculateFee(
         SwapParams calldata swapParams
     ) external view returns (uint24) {
-        return calculateFee(swapParams);
+        return _calculateFee(swapParams);
     }
 }   

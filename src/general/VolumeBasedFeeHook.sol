@@ -98,7 +98,7 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
         SwapParams calldata swapParams,
         bytes calldata
     ) internal virtual override returns (bytes4, BeforeSwapDelta, uint24) {
-        poolManager.updateDynamicLPFee(key, calculateFee(swapParams));
+        poolManager.updateDynamicLPFee(key, _calculateFee(swapParams));
         return (
             BaseHook.beforeSwap.selector,
             BeforeSwapDeltaLibrary.ZERO_DELTA,
@@ -112,12 +112,12 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
      * @param swapParams The parameters of the swap including amount and direction
      * @return calculatedFee The calculated fee as a uint24
      */
-    function calculateFee(
+    function _calculateFee(
         SwapParams calldata swapParams
     ) internal view virtual returns (uint24 calculatedFee) {
         if (swapParams.zeroForOne) {
             if (swapParams.amountSpecified < 0) {
-                calculatedFee = calculateFeePerScenario(
+                calculatedFee = _calculateFeePerScenario(
                     uint256(-swapParams.amountSpecified),
                     minAmount0,
                     maxAmount0,
@@ -125,7 +125,7 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
                     feeAtMinAmount0
                 );
             } else {
-                calculatedFee = calculateFeePerScenario(
+                calculatedFee = _calculateFeePerScenario(
                     uint256(swapParams.amountSpecified),
                     minAmount1,
                     maxAmount1,
@@ -135,7 +135,7 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
             }
         } else {
             if (swapParams.amountSpecified < 0) {
-                calculatedFee = calculateFeePerScenario(
+                calculatedFee = _calculateFeePerScenario(
                     uint256(-swapParams.amountSpecified),
                     minAmount1,
                     maxAmount1,
@@ -143,7 +143,7 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
                     feeAtMinAmount1
                 );
             } else {
-                calculatedFee = calculateFeePerScenario(
+                calculatedFee = _calculateFeePerScenario(
                     uint256(swapParams.amountSpecified),
                     minAmount0,
                     maxAmount0,
@@ -164,7 +164,7 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
      * @param feeAtMinAmount The fee at minimum amount
      * @return calculatedFee The calculated fee as a uint24
      */
-    function calculateFeePerScenario(
+    function _calculateFeePerScenario(
         uint256 volume,
         uint256 minAmount,
         uint256 maxAmount,
