@@ -34,20 +34,28 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
 
     /// @dev The default fee applied when swap amount is below minAmount
     uint24 immutable defaultFee;
+
     /// @dev Fee applied at minAmount0 threshold for currency0
     uint24 immutable feeAtMinAmount0;
+
     /// @dev Fee applied at maxAmount0 threshold for currency0
     uint24 immutable feeAtMaxAmount0;
+
     /// @dev Fee applied at minAmount1 threshold for currency1
     uint24 immutable feeAtMinAmount1;
+
     /// @dev Fee applied at maxAmount1 threshold for currency1
     uint24 immutable feeAtMaxAmount1;
+
     /// @dev Minimum amount threshold for currency0
     uint256 immutable minAmount0;
+
     /// @dev Maximum amount threshold for currency0
     uint256 immutable maxAmount0;
+
     /// @dev Minimum amount threshold for currency1
     uint256 immutable minAmount1;
+    
     /// @dev Maximum amount threshold for currency1
     uint256 immutable maxAmount1;
 
@@ -64,14 +72,19 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
     ) BaseHook(_poolManager) {
         if (params.feeAtMinAmount0 > params.defaultFee)
             InvalidFees.selector.revertWith();
+
         if (params.feeAtMaxAmount0 >= params.feeAtMinAmount0)
             InvalidFees.selector.revertWith();
+
         if (params.feeAtMinAmount1 > params.defaultFee)
             InvalidFees.selector.revertWith();
+
         if (params.feeAtMaxAmount1 >= params.feeAtMinAmount1)
             InvalidFees.selector.revertWith();
+
         if (params.minAmount0 >= params.maxAmount0)
             InvalidAmountThresholds.selector.revertWith();
+
         if (params.minAmount1 >= params.maxAmount1)
             InvalidAmountThresholds.selector.revertWith();
 
@@ -99,6 +112,7 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
         bytes calldata
     ) internal virtual override returns (bytes4, BeforeSwapDelta, uint24) {
         poolManager.updateDynamicLPFee(key, _calculateFee(swapParams));
+
         return (
             BaseHook.beforeSwap.selector,
             BeforeSwapDeltaLibrary.ZERO_DELTA,
@@ -186,6 +200,7 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
         uint256 deltaFee = feeAtMinAmount - feeAtMaxAmount;
         uint256 feeDifference = (deltaFee * (volume - minAmount)) /
             (maxAmount - minAmount);
+            
         return feeAtMinAmount - uint24(feeDifference);
     }
 
