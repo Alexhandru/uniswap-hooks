@@ -22,7 +22,7 @@ import {SwapParams} from "v4-core/src/types/PoolOperation.sol";
  * - Above maxAmount: Uses feeAtMaxAmount
  *
  * Fee relationships must maintain:
- * - feeAtMinAmount < defaultFee
+ * - feeAtMinAmount <= defaultFee
  * - feeAtMaxAmount < feeAtMinAmount
  * - minAmount < maxAmount
  *
@@ -55,7 +55,7 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
      * @dev Constructor that validates and sets the fee parameters.
      * Reverts if:
      * - Any fee at min amount is higher than the default fee
-     * - Any fee at max amount is higher than its corresponding fee at min fee
+     * - Any fee at max amount is higher than or equal to its corresponding fee at min fee
      * - Any min amount is greater than or equal to its max amount
      */
     constructor(
@@ -64,11 +64,11 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
     ) BaseHook(_poolManager) {
         if (params.feeAtMinAmount0 > params.defaultFee)
             InvalidFees.selector.revertWith();
-        if (params.feeAtMaxAmount0 > params.feeAtMinAmount0)
+        if (params.feeAtMaxAmount0 >= params.feeAtMinAmount0)
             InvalidFees.selector.revertWith();
         if (params.feeAtMinAmount1 > params.defaultFee)
             InvalidFees.selector.revertWith();
-        if (params.feeAtMaxAmount1 > params.feeAtMinAmount1)
+        if (params.feeAtMaxAmount1 >= params.feeAtMinAmount1)
             InvalidFees.selector.revertWith();
         if (params.minAmount0 >= params.maxAmount0)
             InvalidAmountThresholds.selector.revertWith();
