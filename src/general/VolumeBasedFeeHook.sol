@@ -72,6 +72,12 @@ contract VolumeBasedFeeHook is BaseHook {
     /// @dev Fee applied at maxAmount1 threshold for currency1
     uint24 immutable feeAtMaxAmount1;
 
+    /// @dev Difference between feeAtMinAmount and feeAtMaxAmount for currency0
+    uint24 immutable feeAtThresholdsDelta0;
+
+    /// @dev Difference between feeAtMinAmount and feeAtMaxAmount for currency1
+    uint24 immutable feeAtThresholdsDelta1;
+
     /// @dev Minimum amount threshold for currency0
     uint256 immutable minAmount0;
 
@@ -83,6 +89,12 @@ contract VolumeBasedFeeHook is BaseHook {
 
     /// @dev Maximum amount threshold for currency1
     uint256 immutable maxAmount1;
+
+    /// @dev Difference between minAmount and maxAmount for currency0
+    uint256 immutable amountThresholdsDelta0;
+
+    /// @dev Difference between minAmount and maxAmount for currency1
+    uint256 immutable amountThresholdsDelta1;
 
     /**
      * @dev Constructor that validates and sets the fee parameters.
@@ -114,14 +126,30 @@ contract VolumeBasedFeeHook is BaseHook {
             InvalidAmountThresholds.selector.revertWith();
 
         defaultFee = params.defaultFee;
+
         feeAtMinAmount0 = params.feeAtMinAmount0;
         feeAtMaxAmount0 = params.feeAtMaxAmount0;
         feeAtMinAmount1 = params.feeAtMinAmount1;
         feeAtMaxAmount1 = params.feeAtMaxAmount1;
+
+        /**
+         * Difference between fee at min amount and fee at max amount for currency0
+         * Used for linear interpolation
+         */
+        feeAtThresholdsDelta0 = params.feeAtMinAmount0 - params.feeAtMaxAmount0;
+        feeAtThresholdsDelta1 = params.feeAtMinAmount1 - params.feeAtMaxAmount1;
+
         minAmount0 = params.minAmount0;
         maxAmount0 = params.maxAmount0;
         minAmount1 = params.minAmount1;
         maxAmount1 = params.maxAmount1;
+
+        /**
+         * Difference between min amount and max amount for currency0
+         * Used for linear interpolation
+         */
+        amountThresholdsDelta0 = params.maxAmount0 - params.minAmount0;
+        amountThresholdsDelta1 = params.maxAmount1 - params.minAmount1;
     }
 
     /**
@@ -165,7 +193,9 @@ contract VolumeBasedFeeHook is BaseHook {
                     minAmount0,
                     maxAmount0,
                     feeAtMaxAmount0,
-                    feeAtMinAmount0
+                    feeAtMinAmount0,
+                    feeAtThresholdsDelta0,
+                    amountThresholdsDelta0
                 );
             } else {
                 /**
@@ -177,7 +207,9 @@ contract VolumeBasedFeeHook is BaseHook {
                     minAmount1,
                     maxAmount1,
                     feeAtMaxAmount1,
-                    feeAtMinAmount1
+                    feeAtMinAmount1,
+                    feeAtThresholdsDelta1,
+                    amountThresholdsDelta1
                 );
             }
         /// Swapping currency1 for currency0
@@ -192,7 +224,9 @@ contract VolumeBasedFeeHook is BaseHook {
                     minAmount1,
                     maxAmount1,
                     feeAtMaxAmount1,
-                    feeAtMinAmount1
+                    feeAtMinAmount1,
+                    feeAtThresholdsDelta1,
+                    amountThresholdsDelta1
                 );
             } else {
                 /**
@@ -204,7 +238,9 @@ contract VolumeBasedFeeHook is BaseHook {
                     minAmount0,
                     maxAmount0,
                     feeAtMaxAmount0,
-                    feeAtMinAmount0
+                    feeAtMinAmount0,
+                    feeAtThresholdsDelta0,
+                    amountThresholdsDelta0
                 );
             }
         }
@@ -225,7 +261,9 @@ contract VolumeBasedFeeHook is BaseHook {
         uint256 minAmount,
         uint256 maxAmount,
         uint24 feeAtMaxAmount,
-        uint24 feeAtMinAmount
+        uint24 feeAtMinAmount,
+        uint24 feeAtThresholdsDelta,
+        uint256 amountThresholdsDelta
     ) internal view virtual returns (uint24) {
         /**
          * Explicitly check if volume is equal to minAmount
@@ -251,8 +289,8 @@ contract VolumeBasedFeeHook is BaseHook {
         return
             feeAtMinAmount -
             uint24(
-                ((feeAtMinAmount - feeAtMaxAmount) * (volume - minAmount)) /
-                    (maxAmount - minAmount)
+                (feeAtThresholdsDelta * (volume - minAmount)) /
+                    amountThresholdsDelta
             );
     }
 
