@@ -153,7 +153,12 @@ contract VolumeBasedFeeHook is BaseHook {
     function _calculateFee(
         SwapParams calldata swapParams
     ) internal view virtual returns (uint24 calculatedFee) {
+        /// Swapping currency0 for currency1
         if (swapParams.zeroForOne) {
+            /**
+             * If amountSpecified is negative, it's an exact input swap
+             * Therefore, the known volume is the amount of currency0 being swapped
+             */
             if (swapParams.amountSpecified < 0) {
                 calculatedFee = _calculateFeePerScenario(
                     uint256(-swapParams.amountSpecified),
@@ -163,6 +168,10 @@ contract VolumeBasedFeeHook is BaseHook {
                     feeAtMinAmount0
                 );
             } else {
+                /**
+                 * If amountSpecified is positive, it's an exact output swap
+                 * Therefore, the known volume is the amount of currency1 being swapped
+                 */
                 calculatedFee = _calculateFeePerScenario(
                     uint256(swapParams.amountSpecified),
                     minAmount1,
@@ -171,7 +180,12 @@ contract VolumeBasedFeeHook is BaseHook {
                     feeAtMinAmount1
                 );
             }
+        /// Swapping currency1 for currency0
         } else {
+            /**
+             * If amountSpecified is negative, it's an exact input swap
+             * Therefore, the known volume is the amount of currency1 being swapped
+             */
             if (swapParams.amountSpecified < 0) {
                 calculatedFee = _calculateFeePerScenario(
                     uint256(-swapParams.amountSpecified),
@@ -181,6 +195,10 @@ contract VolumeBasedFeeHook is BaseHook {
                     feeAtMinAmount1
                 );
             } else {
+                /**
+                 * If amountSpecified is positive, it's an exact output swap
+                 * Therefore, the known volume is the amount of currency0 being swapped
+                 */
                 calculatedFee = _calculateFeePerScenario(
                     uint256(swapParams.amountSpecified),
                     minAmount0,
@@ -209,6 +227,11 @@ contract VolumeBasedFeeHook is BaseHook {
         uint24 feeAtMaxAmount,
         uint24 feeAtMinAmount
     ) internal view virtual returns (uint24) {
+        /**
+         * Explicitly check if volume is equal to minAmount
+         * To allow benefitting of fee reduction
+         * Saving gas on skipping the linear interpolation
+         */
         if (volume == minAmount) {
             return feeAtMinAmount;
         }
@@ -221,6 +244,10 @@ contract VolumeBasedFeeHook is BaseHook {
             return defaultFee;
         }
 
+        /**
+         * Volume is between minAmount and maxAmount
+         * Calculate the fee using linear interpolation
+         */
         return
             feeAtMinAmount -
             uint24(
