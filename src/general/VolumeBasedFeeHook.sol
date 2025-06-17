@@ -23,7 +23,7 @@ import {SwapParams} from "v4-core/src/types/PoolOperation.sol";
  *
  * Fee relationships must maintain:
  * - feeAtMinAmount <= defaultFee
- * - feeAtMaxAmount < feeAtMinAmount
+ * - feeAtMaxAmount <= feeAtMinAmount
  * - minAmount < maxAmount
  *
  * NOTE: The fee calculation is symmetric for both swap directions and both exact input/output swaps.
@@ -73,13 +73,13 @@ contract VolumeBasedFeeHook is IVolumeBasedFeeHook, BaseHook {
         if (params.feeAtMinAmount0 > params.defaultFee)
             InvalidFees.selector.revertWith();
 
-        if (params.feeAtMaxAmount0 >= params.feeAtMinAmount0)
+        if (params.feeAtMaxAmount0 > params.feeAtMinAmount0)
             InvalidFees.selector.revertWith();
 
         if (params.feeAtMinAmount1 > params.defaultFee)
             InvalidFees.selector.revertWith();
 
-        if (params.feeAtMaxAmount1 >= params.feeAtMinAmount1)
+        if (params.feeAtMaxAmount1 > params.feeAtMinAmount1)
             InvalidFees.selector.revertWith();
 
         if (params.minAmount0 >= params.maxAmount0)
