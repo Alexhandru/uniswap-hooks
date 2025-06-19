@@ -13,7 +13,6 @@ import {LPFeeLibrary} from "v4-core/src/libraries/LPFeeLibrary.sol";
 import {ProtocolFeeLibrary} from "v4-core/src/libraries/ProtocolFeeLibrary.sol";
 import {IPositionManager} from "v4-periphery/src/interfaces/IPositionManager.sol";
 import {VolumeBasedFeeHook} from "../../src/general/VolumeBasedFeeHook.sol";
-import {HookMiner} from "v4-periphery/src/utils/HookMiner.sol";
 import {SwapParams} from "v4-core/src/types/PoolOperation.sol";
 import {Deployers} from "v4-core/test/utils/Deployers.sol";
 
@@ -22,6 +21,7 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
     using ProtocolFeeLibrary for uint16;
 
     VolumeBasedFeeHook hook;
+    VolumeBasedFeeHook newHook;
 
     uint24 defaultFee = 3000;
     uint24 feeAtMinAmount0 = 2700;
@@ -60,6 +60,12 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
             address(flags)
         );
 
+        newHook = VolumeBasedFeeHook(address(
+            uint160(
+                Hooks.BEFORE_SWAP_FLAG 
+            ) + 2 ** 96
+        ));
+
         deployCodeTo(
             "VolumeBasedFeeHook.sol:VolumeBasedFeeHook",
             abi.encode(
@@ -85,11 +91,12 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
             swapVolumeParams
         );
 
-        (, bytes32 salt) =
-            HookMiner.find(address(this), flags, type(VolumeBasedFeeHook).creationCode, constructorArgs);
-
         vm.expectRevert(VolumeBasedFeeHook.InvalidFees.selector);
-        new VolumeBasedFeeHook{salt: salt}(IPoolManager(manager), swapVolumeParams);
+        deployCodeTo(
+            "VolumeBasedFeeHook.sol:VolumeBasedFeeHook",
+            abi.encode(manager, swapVolumeParams),
+            address(newHook)
+        );
     }
 
     function test_revert_invalidFeeAtMaxAmount0() public {
@@ -98,12 +105,13 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
         swapVolumeParams.feeAtMaxAmount0 = invalidFeeAtMaxAmount0;
 
         bytes memory constructorArgs = abi.encode(manager, swapVolumeParams);
-
-        (, bytes32 salt) =
-            HookMiner.find(address(this), flags, type(VolumeBasedFeeHook).creationCode, constructorArgs);
-
+  
         vm.expectRevert(VolumeBasedFeeHook.InvalidFees.selector);
-        new VolumeBasedFeeHook{salt: salt}(IPoolManager(manager), swapVolumeParams);
+        deployCodeTo(
+            "VolumeBasedFeeHook.sol:VolumeBasedFeeHook",
+            abi.encode(manager, swapVolumeParams),
+            address(newHook)
+        );
     }
 
     function test_revert_invalidFeeAtMinAmount1() public {
@@ -113,11 +121,12 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
 
         bytes memory constructorArgs = abi.encode(manager, swapVolumeParams);
 
-        (, bytes32 salt) =
-            HookMiner.find(address(this), flags, type(VolumeBasedFeeHook).creationCode, constructorArgs);
-
         vm.expectRevert(VolumeBasedFeeHook.InvalidFees.selector);
-        new VolumeBasedFeeHook{salt: salt}(IPoolManager(manager), swapVolumeParams);
+        deployCodeTo(
+            "VolumeBasedFeeHook.sol:VolumeBasedFeeHook",
+            abi.encode(manager, swapVolumeParams),
+            address(newHook)
+        );
     }
 
     function test_revert_invalidFeeAtMaxAmount1() public {
@@ -127,11 +136,12 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
 
         bytes memory constructorArgs = abi.encode(manager, swapVolumeParams);
 
-        (, bytes32 salt) =
-            HookMiner.find(address(this), flags, type(VolumeBasedFeeHook).creationCode, constructorArgs);
-
         vm.expectRevert(VolumeBasedFeeHook.InvalidFees.selector);
-        new VolumeBasedFeeHook{salt: salt}(IPoolManager(manager), swapVolumeParams);
+        deployCodeTo(
+            "VolumeBasedFeeHook.sol:VolumeBasedFeeHook",
+            abi.encode(manager, swapVolumeParams),
+            address(newHook)
+        );
     }
 
     function test_revert_invalidAmountThresholds_minAmount0() public {
@@ -141,11 +151,12 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
 
         bytes memory constructorArgs = abi.encode(manager, swapVolumeParams);
 
-        (, bytes32 salt) =
-            HookMiner.find(address(this), flags, type(VolumeBasedFeeHook).creationCode, constructorArgs);
-
         vm.expectRevert(VolumeBasedFeeHook.InvalidAmountThresholds.selector);
-        new VolumeBasedFeeHook{salt: salt}(IPoolManager(manager), swapVolumeParams);
+        deployCodeTo(
+            "VolumeBasedFeeHook.sol:VolumeBasedFeeHook",
+            abi.encode(manager, swapVolumeParams),
+            address(newHook)
+        );
     }
 
     function test_revert_invalidAmountThresholds_minAmount1() public {
@@ -155,11 +166,12 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
 
         bytes memory constructorArgs = abi.encode(manager, swapVolumeParams);
 
-        (, bytes32 salt) =
-            HookMiner.find(address(this), flags, type(VolumeBasedFeeHook).creationCode, constructorArgs);
-
         vm.expectRevert(VolumeBasedFeeHook.InvalidAmountThresholds.selector);
-        new VolumeBasedFeeHook{salt: salt}(IPoolManager(manager), swapVolumeParams);
+        deployCodeTo(
+            "VolumeBasedFeeHook.sol:VolumeBasedFeeHook",
+            abi.encode(manager, swapVolumeParams),
+            address(newHook)
+        );
     }
 
     function test_swap_updateDynamicFee_defaultFee() public {
@@ -261,15 +273,11 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
             maxAmount1: 10e18
         });
 
-        // Deploy new hook with modified params
-        (, bytes32 salt) = HookMiner.find(
-            address(this), 
-            flags, 
-            type(VolumeBasedFeeHook).creationCode, 
-            abi.encode(manager, sameFeesParams)
+        deployCodeTo(
+            "VolumeBasedFeeHook.sol:VolumeBasedFeeHook",
+            abi.encode(manager, sameFeesParams),
+            address(newHook)
         );
-        
-        VolumeBasedFeeHook newHook = new VolumeBasedFeeHook{salt: salt}(IPoolManager(manager), sameFeesParams);
 
         // Initialize new pool with the hook
         (PoolKey memory newKey,) = initPoolAndAddLiquidity(
@@ -333,10 +341,18 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
             maxAmount1: maxAmount1
         });
 
-        (, bytes32 salt) =
-            HookMiner.find(address(this), flags, type(VolumeBasedFeeHookHarness).creationCode, abi.encode(manager, params));  
 
-        VolumeBasedFeeHookHarness swapVolume = new VolumeBasedFeeHookHarness{salt: salt}(IPoolManager(manager), params);
+        VolumeBasedFeeHookHarness swapVolume = VolumeBasedFeeHookHarness(address(
+            uint160(
+                Hooks.BEFORE_SWAP_FLAG 
+            ) + 2 ** 96
+        ));
+
+        deployCodeTo(
+            "VolumeBasedFeeHook.t.sol:VolumeBasedFeeHookHarness",
+            abi.encode(manager, params),
+            address(swapVolume)
+        );
 
         (key,) = initPoolAndAddLiquidity(
             currency0, currency1, IHooks(address(swapVolume)), LPFeeLibrary.DYNAMIC_FEE_FLAG, SQRT_PRICE_1_1
