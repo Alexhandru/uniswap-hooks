@@ -272,6 +272,11 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
         assertEq(_fetchPoolLPFee(key), expectedFee);
     }
 
+    /*
+     * Having equal values for both fee at min/max amount
+     * Allows having a single reduced fee for volumes
+     * Bigger than or equal to "minAmount"
+     */ 
     function test_swap_sameMinMaxFees() public {
         // Set up new params where min and max fees are the same
         VolumeBasedFeeHook.SwapVolumeParams

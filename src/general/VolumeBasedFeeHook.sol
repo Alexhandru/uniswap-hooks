@@ -211,7 +211,7 @@ contract VolumeBasedFeeHook is BaseHook {
                     amountThresholdsDelta1
                 );
             }
-        /// Swapping currency1 for currency0
+            /// Swapping currency1 for currency0
         } else {
             /**
              * If amountSpecified is negative, it's an exact input swap
