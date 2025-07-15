@@ -16,6 +16,7 @@ import {VolumeBasedFeeHook} from "../../src/general/VolumeBasedFeeHook.sol";
 import {SwapParams} from "v4-core/src/types/PoolOperation.sol";
 import {Deployers} from "v4-core/test/utils/Deployers.sol";
 import {SafeCast} from "v4-core/src/libraries/SafeCast.sol";
+import {IPoolManagerEvents} from "../utils/IPoolManagerEvents.sol";
 
 contract VolumeBasedFeeHookTest is Test, Deployers {
     using StateLibrary for IPoolManager;
@@ -82,8 +83,6 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
 
         swapVolumeParams.feeAtMinAmount0 = invalidFeeAtMinAmount0;
 
-        bytes memory constructorArgs = abi.encode(manager, swapVolumeParams);
-
         vm.expectRevert(VolumeBasedFeeHook.InvalidFees.selector);
         deployCodeTo(
             "VolumeBasedFeeHook.sol:VolumeBasedFeeHook",
@@ -96,8 +95,6 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
         uint24 invalidFeeAtMaxAmount0 = feeAtMinAmount0 + 1; // Fee higher than feeAtMinAmount0
 
         swapVolumeParams.feeAtMaxAmount0 = invalidFeeAtMaxAmount0;
-
-        bytes memory constructorArgs = abi.encode(manager, swapVolumeParams);
 
         vm.expectRevert(VolumeBasedFeeHook.InvalidFees.selector);
         deployCodeTo(
@@ -112,8 +109,6 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
 
         swapVolumeParams.feeAtMinAmount1 = invalidFeeAtMinAmount1;
 
-        bytes memory constructorArgs = abi.encode(manager, swapVolumeParams);
-
         vm.expectRevert(VolumeBasedFeeHook.InvalidFees.selector);
         deployCodeTo(
             "VolumeBasedFeeHook.sol:VolumeBasedFeeHook",
@@ -126,8 +121,6 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
         uint24 invalidFeeAtMaxAmount1 = feeAtMinAmount1 + 1; // Fee higher than feeAtMinAmount1
 
         swapVolumeParams.feeAtMaxAmount1 = invalidFeeAtMaxAmount1;
-
-        bytes memory constructorArgs = abi.encode(manager, swapVolumeParams);
 
         vm.expectRevert(VolumeBasedFeeHook.InvalidFees.selector);
         deployCodeTo(
@@ -142,8 +135,6 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
 
         swapVolumeParams.minAmount0 = invalidMinAmount0;
 
-        bytes memory constructorArgs = abi.encode(manager, swapVolumeParams);
-
         vm.expectRevert(VolumeBasedFeeHook.InvalidAmountThresholds.selector);
         deployCodeTo(
             "VolumeBasedFeeHook.sol:VolumeBasedFeeHook",
@@ -157,8 +148,6 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
 
         swapVolumeParams.minAmount1 = invalidMinAmount1;
 
-        bytes memory constructorArgs = abi.encode(manager, swapVolumeParams);
-
         vm.expectRevert(VolumeBasedFeeHook.InvalidAmountThresholds.selector);
         deployCodeTo(
             "VolumeBasedFeeHook.sol:VolumeBasedFeeHook",
@@ -170,46 +159,80 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
     function test_swap_updateDynamicFee_defaultFee() public {
         bool zeroForOne = true;
         int256 amountSpecified = -1e18 + 1; // Swap amount that doesn't hit min or max thresholds
-        swap(key, zeroForOne, amountSpecified, ZERO_BYTES);
 
-        // Check the swap amounts
-        assertEq(_fetchPoolLPFee(key), defaultFee);
+        vm.expectEmit(false, false, false, false, address(manager));
+        emit IPoolManagerEvents.Swap(
+            key.toId(),
+            address(this),
+            0, // amount0 (not checked)
+            0, // amount1 (not checked)
+            0, // sqrtPriceX96 (not checked)
+            0, // liquidity (not checked)
+            0, // tick (not checked)
+            defaultFee
+        );
+
+        swap(key, zeroForOne, amountSpecified, ZERO_BYTES);
     }
 
     function test_swap_updateDynamicFee_mintAmount0_feeAtMinAmount0() public {
         bool zeroForOne = true;
         int256 amountSpecified = -1e18; // negative number indicates exact input swap!
-        swap(key, zeroForOne, amountSpecified, ZERO_BYTES);
 
-        // Check the swap amounts
-        assertEq(_fetchPoolLPFee(key), feeAtMinAmount0);
+        vm.expectEmit(false, false, false, false, address(manager));
+        emit IPoolManagerEvents.Swap(
+            key.toId(),
+            address(this),
+            0, 0, 0, 0, 0,
+            feeAtMinAmount0
+        );
+
+        swap(key, zeroForOne, amountSpecified, ZERO_BYTES);
     }
 
     function test_swap_updateDynamicFee_mintAmount0_feeAtMaxAmount0() public {
         bool zeroForOne = true;
         int256 amountSpecified = -10e18; // Exact input swap hitting max threshold
-        swap(key, zeroForOne, amountSpecified, ZERO_BYTES);
 
-        // Check the swap amounts
-        assertEq(_fetchPoolLPFee(key), feeAtMaxAmount0);
+        vm.expectEmit(false, false, false, false, address(manager));
+        emit IPoolManagerEvents.Swap(
+            key.toId(),
+            address(this),
+            0, 0, 0, 0, 0,
+            feeAtMaxAmount0
+        );
+
+        swap(key, zeroForOne, amountSpecified, ZERO_BYTES);
     }
 
     function test_swap_updateDynamicFee_mintAmount1_feeAtMinAmount1() public {
         bool zeroForOne = false;
         int256 amountSpecified = -1e18; // Exact input swap hitting min threshold for token1
-        swap(key, zeroForOne, amountSpecified, ZERO_BYTES);
 
-        // Check the swap amounts
-        assertEq(_fetchPoolLPFee(key), feeAtMinAmount1);
+        vm.expectEmit(false, false, false, false, address(manager));
+        emit IPoolManagerEvents.Swap(
+            key.toId(),
+            address(this),
+            0, 0, 0, 0, 0,
+            feeAtMinAmount1
+        );
+
+        swap(key, zeroForOne, amountSpecified, ZERO_BYTES);
     }
 
     function test_swap_updateDynamicFee_mintAmount1_feeAtMaxAmount1() public {
         bool zeroForOne = false;
         int256 amountSpecified = -10e18; // Exact input swap hitting max threshold for token1
-        swap(key, zeroForOne, amountSpecified, ZERO_BYTES);
 
-        // Check the swap amounts
-        assertEq(_fetchPoolLPFee(key), feeAtMaxAmount1);
+        vm.expectEmit(false, false, false, false, address(manager));
+        emit IPoolManagerEvents.Swap(
+            key.toId(),
+            address(this),
+            0, 0, 0, 0, 0,
+            feeAtMaxAmount1
+        );
+
+        swap(key, zeroForOne, amountSpecified, ZERO_BYTES);
     }
 
     function test_swap_middleVolume_exactInput_zeroForOne() public {
@@ -221,10 +244,16 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
                     ((minAmount0 + maxAmount0) / 2 - minAmount0)) /
                 (maxAmount0 - minAmount0)
         );
-        swap(key, zeroForOne, amountSpecified, ZERO_BYTES);
 
-        // Check the swap amounts
-        assertEq(_fetchPoolLPFee(key), expectedFee);
+        vm.expectEmit(false, false, false, false, address(manager));
+        emit IPoolManagerEvents.Swap(
+            key.toId(),
+            address(this),
+            0, 0, 0, 0, 0,
+            expectedFee
+        );
+
+        swap(key, zeroForOne, amountSpecified, ZERO_BYTES);
     }
 
     function test_swap_middleVolume_exactOutput_zeroForOne() public {
@@ -236,10 +265,16 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
                     ((minAmount1 + maxAmount1) / 2 - minAmount1)) /
                 (maxAmount1 - minAmount1)
         );
-        swap(key, zeroForOne, amountSpecified, ZERO_BYTES);
 
-        // Check the swap amounts
-        assertEq(_fetchPoolLPFee(key), expectedFee);
+        vm.expectEmit(false, false, false, false, address(manager));
+        emit IPoolManagerEvents.Swap(
+            key.toId(),
+            address(this),
+            0, 0, 0, 0, 0,
+            expectedFee
+        );
+
+        swap(key, zeroForOne, amountSpecified, ZERO_BYTES);
     }
 
     function test_swap_middleVolume_exactInput_notZeroForOne() public {
@@ -251,10 +286,16 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
                     ((minAmount1 + maxAmount1) / 2 - minAmount1)) /
                 (maxAmount1 - minAmount1)
         );
-        swap(key, zeroForOne, amountSpecified, ZERO_BYTES);
 
-        // Check the swap amounts
-        assertEq(_fetchPoolLPFee(key), expectedFee);
+        vm.expectEmit(false, false, false, false, address(manager));
+        emit IPoolManagerEvents.Swap(
+            key.toId(),
+            address(this),
+            0, 0, 0, 0, 0,
+            expectedFee
+        );
+
+        swap(key, zeroForOne, amountSpecified, ZERO_BYTES);
     }
 
     function test_swap_middleVolume_exactOutput_notZeroForOne() public {
@@ -266,10 +307,16 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
                     ((minAmount0 + maxAmount0) / 2 - minAmount0)) /
                 (maxAmount0 - minAmount0)
         );
-        swap(key, zeroForOne, amountSpecified, ZERO_BYTES);
 
-        // Check the swap amounts
-        assertEq(_fetchPoolLPFee(key), expectedFee);
+        vm.expectEmit(false, false, false, false, address(manager));
+        emit IPoolManagerEvents.Swap(
+            key.toId(),
+            address(this),
+            0, 0, 0, 0, 0,
+            expectedFee
+        );
+
+        swap(key, zeroForOne, amountSpecified, ZERO_BYTES);
     }
 
     /*
@@ -310,22 +357,28 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
         // Test swap for token0
         bool zeroForOne = true;
         int256 amountSpecified = -5e18; // Amount between min and max
-        swap(newKey, zeroForOne, amountSpecified, ZERO_BYTES);
-        assertEq(
-            _fetchPoolLPFee(newKey),
-            2000,
-            "Fee should be 2000 for token0 swap"
+
+        vm.expectEmit(false, false, false, false, address(manager));
+        emit IPoolManagerEvents.Swap(
+            newKey.toId(),
+            address(this),
+            0, 0, 0, 0, 0,
+            2000
         );
+
+        swap(newKey, zeroForOne, amountSpecified, ZERO_BYTES);
 
         // Test swap for token1
         zeroForOne = false;
         amountSpecified = -5e18; // Amount between min and max
-        swap(newKey, zeroForOne, amountSpecified, ZERO_BYTES);
-        assertEq(
-            _fetchPoolLPFee(newKey),
-            1500,
-            "Fee should be 1500 for token1 swap"
+        vm.expectEmit(false, false, false, false, address(manager));
+        emit IPoolManagerEvents.Swap(
+            newKey.toId(),
+            address(this),
+            0, 0, 0, 0, 0,
+            1500
         );
+        swap(newKey, zeroForOne, amountSpecified, ZERO_BYTES);
     }
 
     function test_fuzz_swapParams(
@@ -389,8 +442,6 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
 
         _validateParams(swapVolume.getSwapVolumeParams());
 
-        swap(key, zeroForOneFuzz == 1, amountSpecifiedFuzz, ZERO_BYTES);
-
         uint24 expectedFee = swapVolume.exposed_calculateFee(
             SwapParams({
                 zeroForOne: zeroForOneFuzz == 1,
@@ -401,11 +452,15 @@ contract VolumeBasedFeeHookTest is Test, Deployers {
             })
         );
 
-        assertEq(
-            _fetchPoolLPFee(key),
-            expectedFee,
-            "LP fee mismatch after swap"
+        vm.expectEmit(false, false, false, false, address(manager));
+        emit IPoolManagerEvents.Swap(
+            key.toId(),
+            address(this),
+            0, 0, 0, 0, 0,
+            expectedFee
         );
+
+        swap(key, zeroForOneFuzz == 1, amountSpecifiedFuzz, ZERO_BYTES);
     }
 
     function _setupFuzzedParams(

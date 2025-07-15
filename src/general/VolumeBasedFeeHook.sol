@@ -9,6 +9,7 @@ import {PoolId, PoolIdLibrary} from "v4-core/src/types/PoolId.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "v4-core/src/types/BeforeSwapDelta.sol";
 import {CustomRevert} from "v4-core/src/libraries/CustomRevert.sol";
 import {SwapParams} from "v4-core/src/types/PoolOperation.sol";
+import {LPFeeLibrary} from "v4-core/src/libraries/LPFeeLibrary.sol";
 
 /**
  * @dev Volume-based dynamic fee hook that adjusts swap fees based on transaction volume.
@@ -158,16 +159,14 @@ contract VolumeBasedFeeHook is BaseHook {
      */
     function _beforeSwap(
         address,
-        PoolKey calldata key,
+        PoolKey calldata,
         SwapParams calldata swapParams,
         bytes calldata
     ) internal virtual override returns (bytes4, BeforeSwapDelta, uint24) {
-        poolManager.updateDynamicLPFee(key, _calculateFee(swapParams));
-
         return (
             BaseHook.beforeSwap.selector,
             BeforeSwapDeltaLibrary.ZERO_DELTA,
-            0
+            _calculateFee(swapParams) | LPFeeLibrary.OVERRIDE_FEE_FLAG
         );
     }
 
